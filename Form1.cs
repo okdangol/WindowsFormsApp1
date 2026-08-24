@@ -49,7 +49,7 @@ namespace WindowsFormsApp1
                         DataRow dr = dt.Rows[0];
                         if (dr != null)
                         {
-                            Console.WriteLine(dr["column1"].ToString());
+                            //Console.WriteLine(dr["column1"].ToString());
                         }
                     }
                     DataTable dataTable = dt;
