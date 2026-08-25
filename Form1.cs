@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics.Eventing.Reader;
 using System.Drawing;
 using System.Linq;
 using System.Security;
@@ -16,7 +17,7 @@ namespace WindowsFormsApp1
 {
     public partial class Form1 : Form
     {
-
+        NpgsqlConnection conn = null;
         public Form1()
         {
             InitializeComponent();
@@ -34,38 +35,57 @@ namespace WindowsFormsApp1
             // (실제 사용 시에는 기존에 존재하는 테이블명을 넣으시면 됩니다)
             string query = "SELECT column1, column2, column3 FROM schema1.table1";
 
-            using (NpgsqlConnection conn = new NpgsqlConnection(connString))
-            {
-                using (NpgsqlCommand cmd = new NpgsqlCommand(query, conn))
-                {
-                    using (NpgsqlDataAdapter adapter = new NpgsqlDataAdapter(cmd))
-                    {
-                        // 데이터를 DataTable에 채웁니다.
-                        adapter.Fill(dt);
-                    }
+            conn = new NpgsqlConnection(connString);
+            var cmd = new NpgsqlCommand(query, conn);
+            var adapter = new NpgsqlDataAdapter(cmd);
+            adapter.Fill(dt);
 
-                    if (dt != null)
-                    {
-                        DataRow dr = dt.Rows[0];
-                        if (dr != null)
-                        {
-                            //Console.WriteLine(dr["column1"].ToString());
-                        }
-                    }
-                    DataTable dataTable = dt;
-
-                    dataGridView1.DataSource = dataTable;
-
-                    DataRow dataRow = dt.Rows[0];
-
-                    string col1 = dataRow["column1"].ToString();
-
-                    textBox1.Text = col1;
-                }
-
-            }
-
+            dataGridView1.DataSource = dt;
         }
 
+
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            if (this.dataGridView1.DataSource is DataTable dt)
+            {
+                int rowCnt = dt.Rows.Count;
+            }
+            else
+            {
+                return;
+            }
+
+            DataRow dr = null;
+            string x = string.Empty;
+            for (int i = 0; i < dt.Rows.Count; i++)
+            {
+                dr = dt.Rows[i];
+                if (dr == null)
+                {
+                    return;
+                }
+                for (int j = 0; j < dt.Columns.Count; j++)
+                {
+                    x = GetRowString(dr, j);
+                    textBox1.Text += x + ", ";
+                }
+                textBox1.Text += "\r\n";
+            }
+        }
+
+        private string GetRowString(DataRow row, int colIdx)
+        {
+            if (row == null) return string.Empty;
+            if (colIdx < 0 || colIdx >= row.ItemArray.Length)
+            { return string.Empty; }
+
+            object val = row[colIdx];
+            if (val == null || val == DBNull.Value)
+            { return string.Empty; }
+
+            return val.ToString().Trim();
+
+        }
     }
 }
